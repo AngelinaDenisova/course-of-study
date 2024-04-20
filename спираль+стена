@@ -1,0 +1,70 @@
+import math
+import pygame
+import sys
+
+FPS = 120
+WIN_WIDTH = 300
+WIN_HEIGHT = 300
+WHITE = (255, 255, 255)
+ORANGE = (255, 150, 100)
+
+pygame.init()
+
+clock = pygame.time.Clock()
+sc = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+
+r = 10  # радиус круга
+trail = []  # список для хранения координат следа от круга
+
+angle = 0  # угол для движения по спирали
+radius_increment = 2  # скорость увеличения радиуса (для движения по спирали)
+max_radius = min(WIN_WIDTH, WIN_HEIGHT) / 2 - r  # максимальный радиус для остановки
+
+x = r  # начальная x координата для прохода по периметру
+y = WIN_HEIGHT - r  # начальная y координата для прохода по периметру
+direction = "right"  # направление движения
+
+circle_completed = False  # флаг для определения, прошел ли круг по периметру окна
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+
+    sc.fill(WHITE)  # заливаем фон
+
+    if not circle_completed:  # если круг еще не прошел по периметру
+        # рисуем линии следа от круга при проходе по периметру
+        for point in trail:
+            pygame.draw.circle(sc, ORANGE, (int(point[0]), int(point[1])), 2)
+
+        # добавляем текущие координаты круга в список следа
+        trail.append((x, y))
+
+        # рисуем круг на периметре окна
+        pygame.draw.circle(sc, ORANGE, (int(x), int(y)), r)
+
+        # обновляем окно
+        pygame.display.update()
+
+        # движение по периметру
+        if direction == "right":
+            x += 2
+            if x >= WIN_WIDTH - r:
+                direction = "up"
+        elif direction == "up":
+            y -= 2
+            if y <= r:
+                direction = "left"
+        elif direction == "left":
+            x -= 2
+            if x <= r:
+                direction = "down"
+        elif direction == "down":
+            y += 2
+            if y >= WIN_HEIGHT - r:
+                direction = "right"
+                circle_completed = True  # установка флага, что круг прошел по периметру
+    else:
+        # движение по спирали
+        x = int(WIN_WIDTH / 2 + angle * math.cos(angle))
