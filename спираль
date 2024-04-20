@@ -1,0 +1,51 @@
+import math
+import pygame
+import sys
+
+FPS = 120
+WIN_WIDTH = 100
+WIN_HEIGHT = 200
+WHITE = (255, 255, 255)
+ORANGE = (255, 150, 100)
+
+pygame.init()
+
+clock = pygame.time.Clock()
+sc = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+
+r = 10  # радиус круга
+trail = []  # список для хранения координат следа от круга
+
+angle = 0  # угол для движения по спирали
+radius_increment = 2  # скорость увеличения радиуса (для движения по спирали)
+max_radius = min(WIN_WIDTH, WIN_HEIGHT) / 2 - r  # максимальный радиус для остановки
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+
+    sc.fill(WHITE)  # заливаем фон
+
+    # рисуем линии следа от круга
+    for point in trail:
+        pygame.draw.circle(sc, ORANGE, (int(point[0]), int(point[1])), 2)
+
+    x = int(WIN_WIDTH / 2 + angle * math.cos(angle))  # вычисляем x координату
+    y = int(WIN_HEIGHT / 2 + angle * math.sin(angle))  # вычисляем y координату
+
+    # добавляем текущие координаты круга в список следа
+    trail.append((x, y))
+
+    # рисуем круг
+    pygame.draw.circle(sc, ORANGE, (int(x), int(y)), r)
+
+    # обновляем окно
+    pygame.display.update()
+
+    angle += radius_increment / max_radius  # увеличиваем угол для движения по спирали
+    if angle > max_radius:  # если достигли максимального радиуса
+        pygame.time.wait(2000)  # Задержка в 2 секунды перед закрытием окна
+        break  # завершаем анимацию
+
+    clock.tick(FPS)
