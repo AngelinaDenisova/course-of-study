@@ -1,0 +1,86 @@
+import pygame
+import sys
+
+FPS = 60
+WIN_WIDTH = 200
+WIN_HEIGHT = 200
+WHITE = (255, 255, 255)
+ORANGE = (255, 150, 100)
+
+class Trail(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface((2, 2))
+        self.image.fill(ORANGE)
+        self.rect = self.image.get_rect(center=(x, y))
+
+class Circle(pygame.sprite.Sprite):
+    def __init__(self, r, x, y):
+        super().__init__()
+        self.image = pygame.Surface((r * 2, r * 2), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, ORANGE, (r, r), r)
+        self.rect = self.image.get_rect(center=(x, y))
+        self.direction = "right"
+
+pygame.init()
+clock = pygame.time.Clock()
+sc = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+
+circle_group = pygame.sprite.Group()
+trail_group = pygame.sprite.Group()
+
+# радиус будущего круга
+r = 10
+# координаты круга
+# начинаем с левого нижнего угла
+x = r
+y = WIN_HEIGHT - r
+
+circle = Circle(r, x, y)
+circle_group.add(circle)
+
+# флаг для определения, прошел ли круг по периметру окна
+circle_completed = False
+
+while not circle_completed:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.time.wait(2000)  # Задержка в 2 секунды перед закрытием окна
+            pygame.quit()
+            sys.exit()
+
+    # заливаем фон
+    sc.fill(WHITE)
+
+    # рисуем линии следа от круга
+    for trail in trail_group:
+        sc.blit(trail.image, trail.rect)
+
+    # добавляем текущие координаты круга в список следа
+    trail = Trail(x, y)
+    trail_group.add(trail)
+
+    # обновляем окно
+    for circle in circle_group:
+        sc.blit(circle.image, circle.rect)
+
+    if circle.direction == "right":
+        circle.rect.x += 2
+        if circle.rect.right >= WIN_WIDTH:
+            circle.direction = "up"
+    elif circle.direction == "up":
+        circle.rect.y -= 2
+        if circle.rect.top <= 0:
+            circle.direction = "left"
+    elif circle.direction == "left":
+        circle.rect.x -= 2
+        if circle.rect.left <= 0:
+            circle.direction = "down"
+    elif circle.direction == "down":
+        circle.rect.y += 2
+        if circle.rect.bottom >= WIN_HEIGHT:
+            circle.direction = "right"
+            circle_completed = True
+
+    clock.tick(FPS)
+    pygame.display.flip()
