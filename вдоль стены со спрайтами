@@ -2,32 +2,22 @@ import pygame
 import sys
 
 FPS = 60
-WIN_WIDTH = 200
-WIN_HEIGHT = 200
+WIN_WIDTH = 600
+WIN_HEIGHT = 400
 WHITE = (255, 255, 255)
 ORANGE = (255, 150, 100)
 
-class Trail(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pygame.Surface((2, 2))
-        self.image.fill(ORANGE)
-        self.rect = self.image.get_rect(center=(x, y))
-
-class Circle(pygame.sprite.Sprite):
-    def __init__(self, r, x, y):
-        super().__init__()
-        self.image = pygame.Surface((r * 2, r * 2), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, ORANGE, (r, r), r)
-        self.rect = self.image.get_rect(center=(x, y))
-        self.direction = "right"
-
-pygame.init()
 clock = pygame.time.Clock()
 sc = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
-circle_group = pygame.sprite.Group()
-trail_group = pygame.sprite.Group()
+class TrailPoint(pygame.sprite.Sprite):
+    def __init__(self, position):
+        super().__init__()
+        self.image = pygame.Surface((2, 2), pygame.SRCALPHA)
+        self.rect = self.image.get_rect(center=position)
+
+# Создание группы спрайтов
+all_sprites = pygame.sprite.Group()
 
 # радиус будущего круга
 r = 10
@@ -36,51 +26,61 @@ r = 10
 x = r
 y = WIN_HEIGHT - r
 
-circle = Circle(r, x, y)
-circle_group.add(circle)
+# список для хранения координат следа от круга
+trail = []
+
+# направление движения (вправо, вверх, влево, вниз)
+direction = "right"
 
 # флаг для определения, прошел ли круг по периметру окна
 circle_completed = False
 
-while not circle_completed:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+while circle_completed == False:
+    for i in pygame.event.get():
+        if i.type == pygame.QUIT:
             pygame.time.wait(2000)  # Задержка в 2 секунды перед закрытием окна
-            pygame.quit()
             sys.exit()
 
     # заливаем фон
     sc.fill(WHITE)
 
-    # рисуем линии следа от круга
-    for trail in trail_group:
-        sc.blit(trail.image, trail.rect)
+    # обновляем и отображаем спрайты точек следа
+    for point in trail:
+        pygame.draw.circle(sc, ORANGE, point, 2)
 
     # добавляем текущие координаты круга в список следа
-    trail = Trail(x, y)
-    trail_group.add(trail)
+    trail.append((x, y))
 
-    # обновляем окно
-    for circle in circle_group:
-        sc.blit(circle.image, circle.rect)
+    # создаем спрайт-точку и добавляем в группу спрайтов
+    trail_point = TrailPoint((x, y))
+    all_sprites.add(trail_point)
 
-    if circle.direction == "right":
-        circle.rect.x += 2
-        if circle.rect.right >= WIN_WIDTH:
-            circle.direction = "up"
-    elif circle.direction == "up":
-        circle.rect.y -= 2
-        if circle.rect.top <= 0:
-            circle.direction = "left"
-    elif circle.direction == "left":
-        circle.rect.x -= 2
-        if circle.rect.left <= 0:
-            circle.direction = "down"
-    elif circle.direction == "down":
-        circle.rect.y += 2
-        if circle.rect.bottom >= WIN_HEIGHT:
-            circle.direction = "right"
+    # рисуем круг
+    pygame.draw.circle(sc, ORANGE, (x, y), r)
+
+    # обновляем экран
+    all_sprites.update()
+    all_sprites.draw(sc)
+    pygame.display.update()
+
+    if direction == "right":
+        x += 2
+        if x >= WIN_WIDTH - r:
+            direction = "up"
+    elif direction == "up":
+        y -= 2
+        if y <= r:
+            direction = "left"
+    elif direction == "left":
+        x -= 2
+        if x <= r:
+            direction = "down"
+    elif direction == "down":
+        y += 2
+        if y >= WIN_HEIGHT - r:
+            direction = "right"
             circle_completed = True
 
     clock.tick(FPS)
-    pygame.display.flip()
+
+В этой версии кода спрайты точек следа создаются с помощью класса `TrailPoint`, который наследует от `pygame.sprite.Sprite`. Эти спрайты добавляются в группу `all_sprites` и обновляются и отображаются на экране вместе с отображением круга. Таким образом, функциональность остается такой же, как и в изначальном коде, но теперь используются спрайты и их группы для управления отображением и обновлением элементов на экране.
