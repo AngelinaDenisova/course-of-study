@@ -1,0 +1,67 @@
+import math
+import pygame
+import sys
+
+FPS = 120
+WIN_WIDTH = 100
+WIN_HEIGHT = 200
+WHITE = (255, 255, 255)
+ORANGE = (255, 150, 100)
+
+pygame.init()
+
+clock = pygame.time.Clock()
+sc = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+
+class TrailPoint(pygame.sprite.Sprite):
+    def __init__(self, position):
+        super().__init__()
+        self.image = pygame.Surface((2, 2), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, ORANGE, (1, 1), 2)  # создаем точку следа
+        self.rect = self.image.get_rect(center=position)
+
+# Создание группы спрайтов
+all_sprites = pygame.sprite.Group()
+
+r = 10  # радиус круга
+trail = []  # список для хранения координат следа от круга
+
+angle = 0  # угол для движения по спирали
+radius_increment = 2  # скорость увеличения радиуса (для движения по спирали)
+max_radius = min(WIN_WIDTH, WIN_HEIGHT) / 2 - r  # максимальный радиус для остановки
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+
+    sc.fill(WHITE)  # заливаем фон
+
+    # обновляем и отображаем спрайты точек следа
+    for point in trail:
+        pygame.draw.circle(sc, ORANGE, (int(point[0]), int(point[1])), 2)
+
+    x = int(WIN_WIDTH / 2 + angle * math.cos(angle))  # вычисляем x координату
+    y = int(WIN_HEIGHT / 2 + angle * math.sin(angle))  # вычисляем y координату
+
+    # добавляем текущие координаты круга в список следа
+    trail.append((x, y))
+
+    # создаем спрайт-точку и добавляем в группу спрайтов
+    trail_point = TrailPoint((x, y))
+    all_sprites.add(trail_point)
+
+    # рисуем круг
+    pygame.draw.circle(sc, ORANGE, (int(x), int(y)), r)
+
+    # обновляем экран
+    all_sprites.update()
+    all_sprites.draw(sc)
+    pygame.display.update()
+
+    angle += radius_increment / max_radius  # увеличиваем угол для движения по спирали
+    if angle > max_radius:  # если достигли максимального радиуса
+        pygame.time.wait(2000)  # Задержка в 2 секунды перед закрытием окна
+        break  # завершаем анимацию
+
+    clock.tick(FPS)
